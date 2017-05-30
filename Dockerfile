@@ -1,15 +1,22 @@
-FROM apiology/ubuntu-ruby:latest
+FROM ruby:2.4-alpine
 MAINTAINER apiology
-
-#
-# Make 'nodejs' prefer to latest node, as default Ubuntu version has an old cacerts bundle
-#
-RUN curl -sL https://deb.nodesource.com/setup_7.x | bash -
 
 #
 # prereqs for scraping, bundles, fetching and debugging
 #
-RUN apt-get update && apt-get install -y xvfb git libicu-dev cmake libqt5webkit5-dev qt5-default netcat python-pip nodejs
+RUN apk update && \
+    apk add \
+      netcat-openbsd \
+      py-pip \
+      nodejs \
+      xvfb \
+      git \
+      icu-dev \
+      cmake \
+      qt5-qtbase-dev \
+      qt5-qtwebkit-dev
+
+ENV QMAKE /usr/lib/qt5/bin/qmake
 
 ENV DISPLAY "localhost:0"
 
