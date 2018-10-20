@@ -1,4 +1,4 @@
-FROM ruby:2.5-alpine
+FROM ruby:2.5-alpine3.8
 MAINTAINER apiology
 
 #
@@ -55,7 +55,7 @@ MAINTAINER apiology
 # https://github.com/thoughtbot/capybara-webkit/issues/885
 # https://github.com/thoughtbot/capybara-webkit/wiki/Installing-Qt-and-compiling-capybara-webkit
 # https://github.com/thoughtbot/capybara-webkit/issues/983
-# 
+#
 
 
 #
