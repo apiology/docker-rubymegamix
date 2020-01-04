@@ -1,0 +1,29 @@
+version: 2
+jobs:
+  publish:
+    working_directory: ~/vld-precache
+    docker:
+      - image: apiology/circleci-ruby:latest
+    steps:
+      - setup_remote_docker
+      - run: docker login -u apiology -p ${DOCKERHUB_TOKEN:?}
+      - run: docker build --pull -t apiology/rubymegamix:alpine .
+      - run: docker push apiology/rubymegamix:alpine
+workflows:
+  version: 2
+  weekly:
+    triggers:
+      - schedule:
+          cron: "0 0 * * 6"
+          filters:
+            branches:
+              only:
+                - alpine
+    jobs:
+      - publish
+  build:
+    jobs:
+      - publish:
+          filters:
+            branches:
+              only: alpine
