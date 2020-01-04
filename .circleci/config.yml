@@ -5,6 +5,7 @@ jobs:
     docker:
       - image: apiology/circleci-ruby:latest
     steps:
+      - checkout
       - setup_remote_docker
       - run: docker login -u apiology -p ${DOCKERHUB_TOKEN:?}
       - run: docker build --pull -t apiology/rubymegamix:alpine .
