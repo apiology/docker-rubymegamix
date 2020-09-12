@@ -1,0 +1,14 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/docker-rubymegamix
+    docker:
+      - image: apiology/circleci-ruby:latest
+    steps:
+      - run: echo "Use alpine branch please"
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build
