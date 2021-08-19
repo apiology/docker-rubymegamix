@@ -1,14 +1,30 @@
 version: 2
 jobs:
-  build:
-    working_directory: ~/docker-rubymegamix
+  publish:
+    working_directory: ~/vld-precache
     docker:
       - image: apiology/circleci-ruby:latest
     steps:
-      - run: echo "Use alpine branch please"
-
+      - checkout
+      - setup_remote_docker
+      - run: docker login -u apiology -p ${DOCKERHUB_TOKEN:?}
+      - run: docker build --pull -t apiology/rubymegamix:alpine .
+      - run: docker push apiology/rubymegamix:alpine
 workflows:
   version: 2
+  weekly:
+    triggers:
+      - schedule:
+          cron: "0 0 * * 6"
+          filters:
+            branches:
+              only:
+                - alpine
+    jobs:
+      - publish
   build:
     jobs:
-      - build
+      - publish:
+          filters:
+            branches:
+              only: alpine
