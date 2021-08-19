@@ -1,0 +1,13 @@
+{
+    "_template": "https://github.com/apiology/cookiecutter-docker-image",
+    "email": "vince@broz.cc",
+    "full_docker_image_name": "apiology/rubymegamix",
+    "full_name": "Vince Broz",
+    "github_username": "apiology",
+    "open_source_license": "MIT license",
+    "project_name": "docker-rubymegamix",
+    "project_short_description": "Docker image with various useful build tools for Ruby apps",
+    "project_slug": "docker-rubymegamix",
+    "type_of_github_repo": "public",
+    "version": "0.1.0"
+}
