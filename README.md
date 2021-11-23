@@ -8,6 +8,5 @@ Docker image with various useful build tools for Ruby apps
 docker pull apiology/rubymegamix:latest
 ```
 
-To build locally, run `make`.  You can see the result of automatic
-builds from CircleCI at
+To build locally, run `make`.  You can see images at
 [Docker Hub](https://hub.docker.com/repository/docker/apiology/rubymegamix)
