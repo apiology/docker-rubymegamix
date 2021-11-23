@@ -115,6 +115,8 @@ jobs:
             - run_with_languages:
                 label: Build image
                 command: make build
+    # This seemed to shave 5ish% of the build time off when added
+    resource_class: large
 
 workflows:
   version: 2
