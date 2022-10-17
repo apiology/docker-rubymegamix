@@ -1,4 +1,4 @@
-.PHONY: clean test help quality
+.PHONY: clean test help typecheck quality
 .DEFAULT_GOAL := default
 
 define PRINT_HELP_PYSCRIPT
@@ -45,10 +45,27 @@ clean: ## remove all built artifacts
 
 test: build ## run tests quickly
 
+citest: test ## Run unit tests from CircleCI
+
+typecheck: ## validate types in code and configuration
+
 overcommit: ## run precommit quality checks
 	bundle exec overcommit --run
 
 quality: overcommit ## run precommit quality checks
+
+clean-coverage: ## Clean out previous output of test coverage to avoid flaky results from previous runs
+
+coverage: test report-coverage ## check code coverage
+
+report-coverage: test ## Report summary of coverage to stdout, and generate HTML, XML coverage report
+
+report-coverage-to-codecov: report-coverage ## use codecov.io for PR-scoped code coverage reports
+	@curl -Os https://uploader.codecov.io/latest/linux/codecov
+	@chmod +x codecov
+	@./codecov --file coverage.xml --nonZero
+
+cicoverage: report-coverage-to-codecov ## check code coverage, then report to codecov
 
 update_from_cookiecutter: ## Bring in changes from template project used to create this repo
 	bundle exec overcommit --uninstall
