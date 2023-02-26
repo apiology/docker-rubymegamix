@@ -21,8 +21,9 @@ build: ## build docker image
 publish: build ## publish docker image
 	docker push apiology/rubymegamix:latest
 
+typecheck: ## validate types in code and configuration
 
-default: build test quality ## run default typechecking, tests and quality
+default: build test quality ## build docker image, run tests and quality
 
 requirements_dev.txt.installed: requirements_dev.txt
 	pip install -q --disable-pip-version-check -r requirements_dev.txt
@@ -47,8 +48,6 @@ test: build ## run tests quickly
 
 citest: test ## Run unit tests from CircleCI
 
-typecheck: ## validate types in code and configuration
-
 overcommit: ## run precommit quality checks
 	bundle exec overcommit --run
 
@@ -61,9 +60,11 @@ coverage: test report-coverage ## check code coverage
 report-coverage: test ## Report summary of coverage to stdout, and generate HTML, XML coverage report
 
 report-coverage-to-codecov: report-coverage ## use codecov.io for PR-scoped code coverage reports
-	@curl -Os https://uploader.codecov.io/latest/linux/codecov
-	@chmod +x codecov
-	@./codecov --file coverage.xml --nonZero
+#	No testing is done, no coverage measurement is taken..
+#
+#	@curl -Os https://uploader.codecov.io/latest/linux/codecov
+#	@chmod +x codecov
+#	@./codecov --file coverage.xml --nonZero
 
 cicoverage: report-coverage-to-codecov ## check code coverage, then report to codecov
 
