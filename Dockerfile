@@ -1,4 +1,5 @@
-FROM ruby:3.2-alpine
+# Use Alpine version compatible with building datadog agent as of 2023-07
+FROM ruby:3.2-alpine3.17
 
 MAINTAINER apiology
 
