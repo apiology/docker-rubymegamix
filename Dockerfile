@@ -113,3 +113,35 @@ ENV PATH $GEM_HOME/bin:$PATH
 RUN mkdir -p "$GEM_HOME" && chmod 1777 "$GEM_HOME"
 
 CMD [ "irb" ]
+
+FROM datadog/agent:7
+MAINTAINER apiology
+
+#
+# Ruby
+#
+
+COPY --from=jammy-ruby-3.2 /usr/local /usr/local
+
+# Ruby dependencies
+RUN apt-get update; \
+	apt-get install -y --no-install-recommends \
+        libyaml-dev
+
+# COPY --from=datadog-agent /usr/lib/python3.10/site-packages /usr/lib/python3.10/site-packages
+
+#
+# DATADOG-AGENT
+#
+#
+
+ENV DOCKER_DD_AGENT=true
+# https://github.com/DataDog/datadog-agent/blob/main/pkg/config/config_template.yaml#L1961-L1967
+ENV DD_LOG_LEVEL=warn
+
+# some kind of previous install conflicted here...not sure if this is right
+RUN rm /etc/ssl/openssl.cnf
+
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+         ca-certificates
