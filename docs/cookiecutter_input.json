@@ -1,4 +1,7 @@
 {
+    "_checkout": null,
+    "_output_dir": "/Users/broz/src/docker-rubymegamix/.git/cookiecutter",
+    "_repo_dir": "/Users/broz/.cookiecutters/cookiecutter-docker-image",
     "_template": "https://github.com/apiology/cookiecutter-docker-image",
     "email": "vince@broz.cc",
     "full_docker_image_name": "apiology/rubymegamix",
