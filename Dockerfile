@@ -27,6 +27,7 @@ RUN set -eux; \
 		dpkg-dev \
 		libgdbm-dev \
 		ruby \
+		libreadline-dev \
 	; \
 	rm -rf /var/lib/apt/lists/*; \
 	\
@@ -126,6 +127,7 @@ COPY --from=jammy-ruby-3.2 /usr/local /usr/local
 # Ruby dependencies
 RUN apt-get update; \
 	apt-get install -y --no-install-recommends \
+        libreadline-dev \
         libyaml-dev
 
 # COPY --from=datadog-agent /usr/lib/python3.10/site-packages /usr/lib/python3.10/site-packages
