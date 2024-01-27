@@ -16,7 +16,7 @@ help:
 	@python -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
 build: ## build docker image
-	docker build --pull --progress plain -t apiology/rubymegamix:latest .
+	docker build --platform linux/amd64 --pull --progress plain -t apiology/rubymegamix:latest .
 
 publish: build ## publish docker image
 	docker push apiology/rubymegamix:latest
