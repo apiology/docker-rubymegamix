@@ -116,7 +116,7 @@ ensure_ruby_versions() {
 
   # You can find out which feature versions are still supported / have
   # been release here: https://www.ruby-lang.org/en/downloads/
-  ruby_versions="$(latest_ruby_version 3.2)"
+  ruby_versions="$(latest_ruby_version 3.3)"
 
   echo "Latest Ruby versions: ${ruby_versions}"
 
@@ -256,8 +256,11 @@ install_package() {
     HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_UPGRADE=1 brew install "${homebrew_package}"
   elif type apt-get >/dev/null 2>&1
   then
-    update_apt
-    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "${apt_package}"
+    if ! dpkg -s "${apt_package}" >/dev/null
+    then
+      update_apt
+      sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "${apt_package}"
+    fi
   else
     >&2 echo "Teach me how to install packages on this plaform"
     exit 1
@@ -363,6 +366,7 @@ ensure_overcommit() {
   if [ -d .git ]
   then
     bundle exec overcommit --install
+    bundle exec overcommit --sign pre-commit
   else
     >&2 echo 'Not in a git repo; not installing git hooks'
   fi
