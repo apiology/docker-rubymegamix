@@ -1,7 +1,7 @@
-# From https://github.com/docker-library/ruby/blob/master/3.2/bookworm/Dockerfile
-# adjusted for the base image used by datadog/agent
+# From https://github.com/docker-library/ruby/blob/master/3.3/bookworm/Dockerfile
+# adjusted for the base image used by datadog/agent (mantic)
 
-FROM buildpack-deps:mantic AS mantic-ruby-3.2
+FROM buildpack-deps:mantic AS mantic-ruby-3.3
 
 # skip installing gem documentation
 RUN set -eux; \
@@ -12,9 +12,13 @@ RUN set -eux; \
 	} >> /usr/local/etc/gemrc
 
 ENV LANG C.UTF-8
-ENV RUBY_MAJOR 3.2
-ENV RUBY_VERSION 3.2.2
-ENV RUBY_DOWNLOAD_SHA256 4b352d0f7ec384e332e3e44cdbfdcd5ff2d594af3c8296b5636c710975149e23
+
+# https://www.ruby-lang.org/en/news/2024/09/03/3-3-5-released/
+ENV RUBY_VERSION 3.3.5
+ENV RUBY_DOWNLOAD_URL https://cache.ruby-lang.org/pub/ruby/3.3/ruby-3.3.5.tar.xz
+ENV RUBY_DOWNLOAD_SHA256 51aec7ea89b46125a2c9adc6f36766b65023d47952b916b1aed300ddcc042359
+
+# VMB: libreadline-dev makes irb work much better
 
 # some of ruby's build scripts are written in ruby
 #   we purge system ruby later to make sure our final image uses what we just built
@@ -23,19 +27,18 @@ RUN set -eux; \
 	savedAptMark="$(apt-mark showmanual)"; \
 	apt-get update; \
 	apt-get install -y --no-install-recommends \
-		bison \
 		dpkg-dev \
 		libgdbm-dev \
 		ruby \
-		libreadline-dev \
+	        libreadline-dev \
 	; \
 	rm -rf /var/lib/apt/lists/*; \
 	\
 	rustArch=; \
 	dpkgArch="$(dpkg --print-architecture)"; \
 	case "$dpkgArch" in \
-		'amd64') rustArch='x86_64-unknown-linux-gnu'; rustupUrl='https://static.rust-lang.org/rustup/archive/1.25.1/x86_64-unknown-linux-gnu/rustup-init'; rustupSha256='5cc9ffd1026e82e7fb2eec2121ad71f4b0f044e88bca39207b3f6b769aaa799c' ;; \
-		'arm64') rustArch='aarch64-unknown-linux-gnu'; rustupUrl='https://static.rust-lang.org/rustup/archive/1.25.1/aarch64-unknown-linux-gnu/rustup-init'; rustupSha256='e189948e396d47254103a49c987e7fb0e5dd8e34b200aa4481ecc4b8e41fb929' ;; \
+		'amd64') rustArch='x86_64-unknown-linux-gnu'; rustupUrl='https://static.rust-lang.org/rustup/archive/1.26.0/x86_64-unknown-linux-gnu/rustup-init'; rustupSha256='0b2f6c8f85a3d02fde2efc0ced4657869d73fccfce59defb4e8d29233116e6db' ;; \
+		'arm64') rustArch='aarch64-unknown-linux-gnu'; rustupUrl='https://static.rust-lang.org/rustup/archive/1.26.0/aarch64-unknown-linux-gnu/rustup-init'; rustupSha256='673e336c81c65e6b16dcdede33f4cc9ed0f08bde1dbe7a935f113605292dc800' ;; \
 	esac; \
 	\
 	if [ -n "$rustArch" ]; then \
@@ -47,13 +50,13 @@ RUN set -eux; \
 		\
 		export RUSTUP_HOME='/tmp/rust/rustup' CARGO_HOME='/tmp/rust/cargo'; \
 		export PATH="$CARGO_HOME/bin:$PATH"; \
-		/tmp/rust/rustup-init -y --no-modify-path --profile minimal --default-toolchain '1.66.0' --default-host "$rustArch"; \
+		/tmp/rust/rustup-init -y --no-modify-path --profile minimal --default-toolchain '1.74.1' --default-host "$rustArch"; \
 		\
 		rustc --version; \
 		cargo --version; \
 	fi; \
 	\
-	wget -O ruby.tar.xz "https://cache.ruby-lang.org/pub/ruby/${RUBY_MAJOR%-rc}/ruby-$RUBY_VERSION.tar.xz"; \
+	wget -O ruby.tar.xz "$RUBY_DOWNLOAD_URL"; \
 	echo "$RUBY_DOWNLOAD_SHA256 *ruby.tar.xz" | sha256sum --check --strict; \
 	\
 	mkdir -p /usr/src/ruby; \
@@ -86,7 +89,7 @@ RUN set -eux; \
 	apt-mark auto '.*' > /dev/null; \
 	apt-mark manual $savedAptMark > /dev/null; \
 	find /usr/local -type f -executable -not \( -name '*tkinter*' \) -exec ldd '{}' ';' \
-		| awk '/=>/ { so = $(NF-1); if (index(so, "/usr/local/") == 1) { next }; gsub("^/(usr/)?", "", so); print so }' \
+		| awk '/=>/ { so = $(NF-1); if (index(so, "/usr/local/") == 1) { next }; gsub("^/(usr/)?", "", so); printf "*%s\n", so }' \
 		| sort -u \
 		| xargs -r dpkg-query --search \
 		| cut -d: -f1 \
@@ -110,8 +113,10 @@ ENV GEM_HOME /usr/local/bundle
 ENV BUNDLE_SILENCE_ROOT_WARNING=1 \
 	BUNDLE_APP_CONFIG="$GEM_HOME"
 ENV PATH $GEM_HOME/bin:$PATH
-# adjust permissions of a few directories for running "gem install" as an arbitrary user
-RUN mkdir -p "$GEM_HOME" && chmod 1777 "$GEM_HOME"
+RUN set -eux; \
+	mkdir "$GEM_HOME"; \
+# adjust permissions of GEM_HOME for running "gem install" as an arbitrary user
+	chmod 1777 "$GEM_HOME"
 
 CMD [ "irb" ]
 
@@ -122,7 +127,7 @@ MAINTAINER apiology
 # Ruby
 #
 
-COPY --from=mantic-ruby-3.2 /usr/local /usr/local
+COPY --from=mantic-ruby-3.3 /usr/local /usr/local
 
 # Ruby dependencies
 RUN apt-get update; \
