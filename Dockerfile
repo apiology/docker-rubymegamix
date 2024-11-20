@@ -1,7 +1,9 @@
 # From https://github.com/docker-library/ruby/blob/master/3.3/bookworm/Dockerfile
-# adjusted for the base image used by datadog/agent (mantic)
-
-FROM buildpack-deps:mantic AS mantic-ruby-3.3
+# adjusted for the base image used by datadog/agent (noble)
+# https://hub.docker.com/r/datadog/agent
+# docker run --entrypoint=/bin/bash -it datadog/agent:latest
+# cat /etc/os-release
+FROM buildpack-deps:noble AS noble-ruby-3.3
 
 # skip installing gem documentation
 RUN set -eux; \
@@ -120,14 +122,14 @@ RUN set -eux; \
 
 CMD [ "irb" ]
 
-FROM ubuntu:mantic
+FROM ubuntu:noble
 MAINTAINER apiology
 
 #
 # Ruby
 #
 
-COPY --from=mantic-ruby-3.3 /usr/local /usr/local
+COPY --from=noble-ruby-3.3 /usr/local /usr/local
 
 # Ruby dependencies
 RUN apt-get update; \
