@@ -188,6 +188,17 @@ ensure_bundle() {
       bundler_version=$(bundle --version | cut -d ' ' -f 3)
   fi
   echo "Bundler version: ${bundler_version}"
+  if [ -f Gemfile.lock ]
+  then
+    lock_bundler=$(awk '/^BUNDLED WITH/{getline; gsub(/^ +/,""); print; exit}' Gemfile.lock)
+    if [ -n "${lock_bundler}" ] && [ "${bundler_version}" != "${lock_bundler}" ]
+    then
+      >&2 echo "Installing Gemfile.lock bundler ${lock_bundler} (was ${bundler_version})"
+      gem install "bundler:${lock_bundler}"
+      bundler_version="${lock_bundler}"
+      rm -f Gemfile.lock.installed
+    fi
+  fi
   bundler_version_major=$(cut -d. -f1 <<< "${bundler_version}")
   bundler_version_minor=$(cut -d. -f2 <<< "${bundler_version}")
   bundler_version_patch=$(cut -d. -f3 <<< "${bundler_version}")
@@ -365,7 +376,7 @@ ensure_python_versions() {
 
 ensure_pyenv_virtualenvs() {
   latest_python_version="$(cut -d' ' -f1 <<< "${python_versions}")"
-  virtualenv_name="docker-rubymegamix-${latest_python_version}"
+  virtualenv_name="docker-circleci-${latest_python_version}"
   if ! [ -d ~/".pyenv/versions/${virtualenv_name}" ]
   then
     pyenv virtualenv "${latest_python_version}" "${virtualenv_name}" || true
