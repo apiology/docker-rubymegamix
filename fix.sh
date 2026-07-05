@@ -22,6 +22,35 @@ debug_timing
 
 set -o pipefail
 
+apt_upgraded=0
+
+update_apt() {
+  if [ "${apt_upgraded}" = 0 ]
+  then
+    sudo DEBIAN_FRONTEND=noninteractive apt-get update -y
+    apt_upgraded=1
+  fi
+}
+
+install_package() {
+  homebrew_package=${1:?homebrew package}
+  apt_package=${2:-${homebrew_package}}
+  if [ "$(uname)" == "Darwin" ]
+  then
+    HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_UPGRADE=1 brew install "${homebrew_package}"
+  elif type apt-get >/dev/null 2>&1
+  then
+    if ! dpkg -s "${apt_package}" >/dev/null 2>&1
+    then
+      update_apt
+      sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "${apt_package}"
+    fi
+  else
+    >&2 echo "Teach me how to install packages on this plaform"
+    exit 1
+  fi
+}
+
 install_rbenv() {
   if [ "$(uname)" == "Darwin" ]
   then
@@ -95,21 +124,16 @@ latest_ruby_version() {
   set -e
 }
 
-ensure_binary_library() {
-  library_base_name=${1:?library base name - like libfoo}
+ensure_dev_library() {
+  header_file_name=${1:?header file name}
   homebrew_package=${2:?homebrew package}
   apt_package=${3:-${homebrew_package}}
-  if ! [ -f /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib/"${library_base_name}*.dylib" ] && \
-      ! [ -f /opt/homebrew/lib/"${library_base_name}*.dylib" ] && \
-      ! [ -f /usr/lib/"${library_base_name}.so" ] && \
-      ! [ -f /usr/lib/x86_64-linux-gnu/"${library_base_name}.so" ] && \
-      ! [ -f /usr/local/lib/"${library_base_name}.so" ] && \
-      ! [ -f /usr/local/opt/"${homebrew_package}/lib/${library_base_name}*.dylib" ]
+  if ! [ -f /usr/include/"${header_file_name}" ] && \
+      ! [ -f /usr/include/x86_64-linux-gnu/"${header_file_name}" ] && \
+      ! [ -f /usr/local/include/"${header_file_name}" ] && \
+      ! [ -f  /usr/local/opt/"${homebrew_package}"/include/"${header_file_name}" ]
   then
-      if ! compgen -G "/opt/homebrew/Cellar/${homebrew_package}"*/*/"lib/${library_base_name}"*.dylib >/dev/null 2>&1
-      then
-        install_package "${homebrew_package}" "${apt_package}"
-      fi
+    install_package "${homebrew_package}" "${apt_package}"
   fi
 }
 
@@ -320,7 +344,7 @@ update_package() {
     brew install "${homebrew_package}"
   elif type apt-get >/dev/null 2>&1
   then
-    make update_apt
+    update_apt
     sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "${apt_package}"
   else
     >&2 echo "Teach me how to install packages on this plaform"
