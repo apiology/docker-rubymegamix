@@ -18,10 +18,10 @@ help:
 default: clean-typecoverage build-deps typecheck typecoverage clean-coverage test coverage build overcommit_branch quality ## run default typechecking, tests, quality, and docker image build
 
 build: ## build docker image
-	docker build --platform linux/amd64 --pull --progress plain -t apiology/rubymegamix:latest .
+	docker build --pull --progress plain -t apiology/circleci:latest .
 
 publish: build ## publish docker image
-	docker push apiology/rubymegamix:latest
+	docker push apiology/circleci:latest
 
 SOURCE_FILE_GLOBS = ['{config,lib,app,script,spec}/**/*.rb', 'ext/**/*.{c,rb}']
 
@@ -72,9 +72,9 @@ pip_install: requirements_dev.txt.installed ## Install Python dependencies
 
 Gemfile.lock: Gemfile .bundle/config
 	if [ ! -f Gemfile.lock ]; then \
-	  bundle install; \
+	  bin/bundle install; \
 	else \
-	  bundle lock; \
+	  bin/bundle lock; \
 	fi
 
 .bundle/config:
@@ -89,7 +89,7 @@ Gemfile.lock.installed: Gemfile vendor/.keep
 
 vendor/.keep: Gemfile.lock
 	make gem_dependencies
-	bundle install
+	bin/bundle install
 	touch vendor/.keep
 
 bundle_install: Gemfile.lock.installed ## Install Ruby dependencies
