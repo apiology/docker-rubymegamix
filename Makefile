@@ -49,7 +49,7 @@ test: build ## run tests quickly
 citest: test ## Run unit tests from CircleCI
 
 overcommit: ## run precommit quality checks
-	bundle exec overcommit --run
+	bin/overcommit --run
 
 quality: overcommit ## run precommit quality checks
 
@@ -66,6 +66,12 @@ report-coverage-to-codecov: report-coverage ## use codecov.io for PR-scoped code
 #	@chmod +x codecov
 #	@./codecov --file coverage.xml --nonZero
 
+update_apt: .make/apt_updated
+
+.make/apt_updated:
+	sudo DEBIAN_FRONTEND=noninteractive apt-get update -y
+	touch .make/apt_updated
+
 cicoverage: report-coverage-to-codecov ## check code coverage, then report to codecov
 
 update_from_cookiecutter: ## Bring in changes from template project used to create this repo
@@ -74,4 +80,3 @@ update_from_cookiecutter: ## Bring in changes from template project used to crea
 
 post_cookiecutter_sync: ## Ecosystem-specific steps after template sync (empty by default)
 	@:
-
