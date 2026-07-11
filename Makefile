@@ -1,4 +1,4 @@
-.PHONY: build build-deps build-typecheck bundle_install cicoverage citypecheck citest citypecoverage clean clean-coverage clean-typecheck clean-typecoverage coverage default gem_dependencies help overcommit quality repl report-coverage report-coverage-to-codecov test typecheck typecoverage post_cookiecutter_sync update_from_cookiecutter docs
+.PHONY: clean test help typecheck quality
 .DEFAULT_GOAL := default
 
 define PRINT_HELP_PYSCRIPT
@@ -15,54 +15,15 @@ export PRINT_HELP_PYSCRIPT
 help:
 	@python -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
-default: clean-typecoverage build-deps typecheck typecoverage clean-coverage test coverage build overcommit_branch quality ## run default typechecking, tests, quality, and docker image build
-
 build: ## build docker image
-	docker build --pull --progress plain -t apiology/rubymegamix:latest .
+	docker build --platform linux/amd64 --pull --progress plain -t apiology/rubymegamix:latest .
 
 publish: build ## publish docker image
 	docker push apiology/rubymegamix:latest
 
-SOURCE_FILE_GLOBS = ['{config,lib,app,script,spec}/**/*.rb', 'ext/**/*.{c,rb}']
+typecheck: ## validate types in code and configuration
 
-SOURCE_FILES := $(shell ruby -e "puts Dir.glob($(SOURCE_FILE_GLOBS))")
-
-start: ## run code continously and watch files for changes
-	echo "Teach me how to 'make start'"
-	exit 1
-
-build-deps: bundle_install pip_install build-typecheck ## Update 3rd party packages as well and produce any artifacts needed from code
-
-types.installed: Gemfile.lock Gemfile.lock.installed ## Ensure typechecking dependencies are in place
-	touch types.installed
-
-build-typecheck: types.installed  ## Fetch information that type checking depends on
-
-docs: ## Generate documentation
-
-clean-typecheck: ## Refresh the easily-regenerated information that type checking depends on
-	rm -f types.installed
-	echo all clear
-
-realclean-typecheck: clean-typecheck ## Remove all type checking artifacts
-
-realclean: clean realclean-typecheck
-	rm -fr vendor/bundle .bundle/config
-	rm -f .make/*
-	rm -f *.installed
-
-typecheck: build-typecheck ## validate types in code and configuration
-
-citypecheck: typecheck ## Run type check from CircleCI
-
-typecoverage: typecheck ## Run type checking and then ratchet coverage in metrics/
-
-clean-typecoverage: ## Clean out type-related coverage previous results to avoid flaky results
-
-citypecoverage: citypecheck ## Run type checking, ratchet coverage, and then complain if ratchet needs to be committed
-
-config/env: config/env.1p  ## Create file suitable for docker-compose usage
-	cat config/env.1p | cut -d= -f1 > config/env
+default: build test quality ## build docker image, run tests and quality
 
 requirements_dev.txt.installed: requirements_dev.txt
 	pip install -q --disable-pip-version-check -r requirements_dev.txt
@@ -70,47 +31,27 @@ requirements_dev.txt.installed: requirements_dev.txt
 
 pip_install: requirements_dev.txt.installed ## Install Python dependencies
 
-Gemfile.lock: Gemfile .bundle/config
-	if [ ! -f Gemfile.lock ]; then \
-	  bundle install; \
-	else \
-	  bundle lock; \
-	fi
+# bundle install doesn't get run here so that we can catch it below in
+# fresh-checkout and fresh-rbenv cases
+Gemfile.lock: Gemfile
 
-.bundle/config:
-	touch .bundle/config
-
-gem_dependencies: .bundle/config
-
-# Ensure any Gemfile.lock changes, even pulled from git, ensure a
-# bundle is installed.
-Gemfile.lock.installed: Gemfile vendor/.keep
-	touch Gemfile.lock.installed
-
-vendor/.keep: Gemfile.lock .ruby-version
-	make gem_dependencies
+# Ensure any Gemfile.lock changes ensure a bundle is installed.
+Gemfile.lock.installed: Gemfile.lock
 	bundle install
-	touch vendor/.keep
+	touch Gemfile.lock.installed
 
 bundle_install: Gemfile.lock.installed ## Install Ruby dependencies
 
-clean: clean-typecoverage clean-typecheck clean-coverage ## remove all built artifacts
+clean: ## remove all built artifacts
 
-test: build-deps ## run tests quickly
+test: build ## run tests quickly
 
 citest: test ## Run unit tests from CircleCI
 
 overcommit: ## run precommit quality checks
 	bin/overcommit --run
 
-overcommit_branch: ## run precommit quality checks only on changed files
-	bin/overcommit --run --diff origin/main
-
 quality: overcommit ## run precommit quality checks
-
-repl: ## Launch an interactive development shell
-	@echo "Teach me how to make repl"
-	@exit 1
 
 clean-coverage: ## Clean out previous output of test coverage to avoid flaky results from previous runs
 
@@ -131,7 +72,7 @@ update_apt: .make/apt_updated
 	sudo DEBIAN_FRONTEND=noninteractive apt-get update -y
 	touch .make/apt_updated
 
-cicoverage: citest report-coverage-to-codecov ## check code coverage
+cicoverage: report-coverage-to-codecov ## check code coverage, then report to codecov
 
 update_from_cookiecutter: ## Bring in changes from template project used to create this repo
 	bin/cookiecutter_project_upgrader.sh

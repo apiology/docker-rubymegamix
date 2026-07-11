@@ -115,21 +115,16 @@ latest_ruby_version() {
   set -e
 }
 
-ensure_binary_library() {
-  library_base_name=${1:?library base name - like libfoo}
+ensure_dev_library() {
+  header_file_name=${1:?header file name}
   homebrew_package=${2:?homebrew package}
   apt_package=${3:-${homebrew_package}}
-  if ! [ -f /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib/"${library_base_name}*.dylib" ] && \
-      ! [ -f /opt/homebrew/lib/"${library_base_name}*.dylib" ] && \
-      ! [ -f /usr/lib/"${library_base_name}.so" ] && \
-      ! [ -f /usr/lib/x86_64-linux-gnu/"${library_base_name}.so" ] && \
-      ! [ -f /usr/local/lib/"${library_base_name}.so" ] && \
-      ! [ -f /usr/local/opt/"${homebrew_package}/lib/${library_base_name}*.dylib" ]
+  if ! [ -f /usr/include/"${header_file_name}" ] && \
+      ! [ -f /usr/include/x86_64-linux-gnu/"${header_file_name}" ] && \
+      ! [ -f /usr/local/include/"${header_file_name}" ] && \
+      ! [ -f  /usr/local/opt/"${homebrew_package}"/include/"${header_file_name}" ]
   then
-      if ! compgen -G "/opt/homebrew/Cellar/${homebrew_package}"*/*/"lib/${library_base_name}"*.dylib >/dev/null 2>&1
-      then
-        install_package "${homebrew_package}" "${apt_package}"
-      fi
+    bin/install_package "${homebrew_package}" "${apt_package}"
   fi
 }
 
@@ -257,7 +252,8 @@ ensure_bundle() {
   #
   # This affects nokogiri, which will try to reinstall itself in
   # Docker builds where it's already installed if this is not run.
-  make Gemfile.lock
+  # Docker builds and CircleCI run on x86_64-linux; keep these in the lockfile.
+  bundle lock --add-platform x86_64-linux x86_64-linux-musl
   make bundle_install
 }
 
@@ -498,12 +494,6 @@ ensure_overcommit() {
   fi
 }
 
-ensure_rbenv
-
-ensure_types_built() {
-  make build-typecheck
-}
-
 ensure_hooks_path
 
 ensure_ruby_versions
@@ -523,7 +513,5 @@ ensure_pip_and_wheel
 ensure_python_requirements
 
 ensure_shellcheck
-
-ensure_types_built
 
 ensure_overcommit
