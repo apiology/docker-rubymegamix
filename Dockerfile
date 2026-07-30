@@ -15,10 +15,10 @@ RUN set -eux; \
 
 ENV LANG C.UTF-8
 
-# https://www.ruby-lang.org/en/news/2024/09/03/3-3-5-released/
-ENV RUBY_VERSION 3.3.5
-ENV RUBY_DOWNLOAD_URL https://cache.ruby-lang.org/pub/ruby/3.3/ruby-3.3.5.tar.xz
-ENV RUBY_DOWNLOAD_SHA256 51aec7ea89b46125a2c9adc6f36766b65023d47952b916b1aed300ddcc042359
+# https://www.ruby-lang.org/en/news/2026/07/16/ruby-3-3-12-released/
+ENV RUBY_VERSION 3.3.12
+ENV RUBY_DOWNLOAD_URL https://cache.ruby-lang.org/pub/ruby/3.3/ruby-3.3.12.tar.xz
+ENV RUBY_DOWNLOAD_SHA256 873e3297990b8cff7a5436f6e510a3a7a18c74e5f2c794e4162e605fe0a743b3
 
 # VMB: libreadline-dev makes irb work much better
 
